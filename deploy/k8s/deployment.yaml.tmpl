@@ -44,11 +44,11 @@ spec:
         deploy-group: ${DEPLOY_GROUP}
     spec:
       nodeSelector:
-        role.vivareal.io/ondemand: "true"
+        vivareal.io/reserved-for: datadog
       tolerations:
-      - effect: PreferNoSchedule
-        key: role.vivareal.io/ondemand
-        value: "true"
+      - effect: NoSchedule
+        key: vivareal.io/reserved-for
+        value: datadog
       containers:
         - name: search-api-container
           image: ${IMAGE_NAME}
@@ -57,6 +57,10 @@ spec:
               value: ${ENV}
             - name: JAVA_OPTS
               value: ${RUN_OPTS}
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
           ports:
             - containerPort: 8482
               protocol: TCP
@@ -129,16 +133,12 @@ spec:
         tier: spot
         deploy-group: ${DEPLOY_GROUP}
     spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-              - key: deploy
-                operator: In
-                values:
-                - ${DEPLOY_NAME}
-            topologyKey: kubernetes.io/hostname
+      nodeSelector:
+        vivareal.io/reserved-for: datadog
+      tolerations:
+        - effect: NoSchedule
+          key: vivareal.io/reserved-for
+          value: datadog
       containers:
         - name: search-api-container
           image: ${IMAGE_NAME}
@@ -147,6 +147,10 @@ spec:
               value: ${ENV}
             - name: JAVA_OPTS
               value: ${RUN_OPTS}
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
           ports:
             - containerPort: 8482
               protocol: TCP
