@@ -85,7 +85,7 @@ configurations {
     compile.exclude module: 'spring-boot-starter-tomcat'
     compile.exclude module: 'undertow-websockets-jsr'
     compile.exclude module: 'hibernate-validator'
-    newRelic
+    instana
 }
 
 dependencyManagement {
@@ -129,8 +129,7 @@ dependencies {
 
     compile 'org.jparsec:jparsec:3.1'
 
-    compile 'com.newrelic.agent.java:newrelic-api:' + NEW_RELIC_VERSION
-    newRelic 'com.newrelic.agent.java:newrelic-agent:' + NEW_RELIC_VERSION
+    instana 'com.instana:instana-javaagent:' + INSTANA_VERSION
 
     // elasticsearch/lucene unit tests
     testCompile 'org.elasticsearch.test:framework:' + ELASTICSEARCH_VERSION
@@ -146,27 +145,17 @@ bootRun {
     jvmArgs = ["-Xdebug", "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005"]
 }
 
-task newrelicDeps(dependsOn: 'bootJar') {
+task instanaDeps(dependsOn: 'bootJar') {
     doLast {
         copy {
-            from configurations.newRelic.fileCollection { it.name == 'newrelic-agent' }.singleFile
+            from configurations.instana
             into './build/libs'
-            rename { 'newrelic.jar' }
-        }
-    }
-
-    if (project.hasProperty('newRelicKey')) {
-        doLast {
-            copy {
-                filter(ReplaceTokens, tokens: [newRelicKey: newRelicKey])
-                from 'src/main/resources/newrelic.yml'
-                into './build/resources/main'
-            }
+            rename('instana-javaagent-' + INSTANA_VERSION + '.jar', 'instana.jar')
         }
     }
 }
 
-task copyJarForDockerCompose(dependsOn: 'newrelicDeps', type: Copy) {
+task copyJarForDockerCompose(dependsOn: 'instanaDeps', type: Copy) {
     from bootJar
     into './build/libs/'
     rename { 'search-api.jar' }

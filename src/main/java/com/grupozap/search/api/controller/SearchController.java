@@ -18,7 +18,6 @@ import com.netflix.config.ConfigurationManager;
 import com.netflix.hystrix.contrib.javanica.annotation.DefaultProperties;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
-import com.newrelic.api.agent.Trace;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -89,7 +88,6 @@ public class SearchController {
         @HystrixProperty(name = CORE_SIZE, value = MIN_SIZE),
         @HystrixProperty(name = MAX_QUEUE_SIZE, value = MAX_SIZE)
       })
-  @Trace(dispatcher = true)
   public ResponseEntity<Object> id(BaseApiRequest request, @PathVariable String id) {
     indexSettings.validateIndex(request);
     var response = searchService.getById(request, id);
@@ -125,7 +123,6 @@ public class SearchController {
         @HystrixProperty(name = CORE_SIZE, value = MIN_SIZE),
         @HystrixProperty(name = MAX_QUEUE_SIZE, value = MAX_SIZE)
       })
-  @Trace(dispatcher = true)
   public ResponseEntity<Object> search(SearchApiRequest request) {
     indexSettings.validateIndex(request);
     return builderOK.body(
@@ -153,7 +150,6 @@ public class SearchController {
 
   @RequestMapping(value = "/{index}/stream", method = GET)
   @ApiIgnore
-  @Trace(dispatcher = true)
   public StreamingResponseBody stream(
       FilterableApiRequest request, HttpServletResponse httpServletResponse) {
     indexSettings.validateIndex(request);

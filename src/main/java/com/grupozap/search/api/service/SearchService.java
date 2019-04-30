@@ -13,8 +13,6 @@ import com.grupozap.search.api.exception.QueryTimeoutException;
 import com.grupozap.search.api.model.http.BaseApiRequest;
 import com.grupozap.search.api.model.http.FilterableApiRequest;
 import com.grupozap.search.api.model.http.SearchApiRequest;
-import com.newrelic.api.agent.NewRelic;
-import com.newrelic.api.agent.Trace;
 import java.io.OutputStream;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.get.GetRequest;
@@ -36,7 +34,6 @@ public class SearchService {
 
   @Autowired private RestHighLevelClient restHighLevelClient;
 
-  @Trace
   public GetResponse getById(BaseApiRequest request, String id) {
     try {
       return restHighLevelClient.get(this.queryAdapter.getById(request, id), DEFAULT);
@@ -48,12 +45,10 @@ public class SearchService {
     }
   }
 
-  @Trace
   public SearchResponse search(SearchApiRequest request) {
     return search(request, 1);
   }
 
-  @Trace
   public SearchResponse search(SearchApiRequest request, final int retries) {
     var searchRequest = this.queryAdapter.query(request);
     try {
@@ -89,7 +84,5 @@ public class SearchService {
     if (request.getSort() == null) request.setDisableSort(true);
 
     elasticSearch.stream(request, stream);
-
-    if ((nanoTime() - startTime) > FILTER_THRESHOLD) NewRelic.ignoreTransaction();
   }
 }

@@ -11,7 +11,6 @@ import com.grupozap.search.api.model.query.GeoPointValue;
 import com.grupozap.search.api.model.query.OrderOperator;
 import com.grupozap.search.api.model.query.QueryFragment;
 import com.grupozap.search.api.model.query.Sort;
-import com.newrelic.api.agent.Trace;
 import java.util.Optional;
 import org.jparsec.Parser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,7 +111,6 @@ public class SortParser {
     return sortSingleParser;
   }
 
-  @Trace
   public Sort parse(String string) {
     return sortParser.parse(string);
   }
