@@ -53,11 +53,6 @@ MAX_SURGE:=1
 ifeq ($(ONDEMAND_REPLICAS),)
 	override ONDEMAND_REPLICAS:=$(if $(filter prod,$(ENV)),2,0)
 endif
-ifeq ($(SPOT_REPLICAS),)
-	override SPOT_REPLICAS:=$(if $(filter prod,$(ENV)),2,1)
-endif
-MIN_SPOT_REPLICAS:=$(SPOT_REPLICAS)
-MAX_SPOT_REPLICAS:=10
 ifeq ($(FRIENDLY_DNS),)
 	override FRIENDLY_DNS:=$(if $(filter prod,$(ENV)),,$(ENV)-)$(PROJECT_NAME).grupozap.io
 endif
@@ -67,7 +62,7 @@ endif
 DEPLOY_GROUP:=test
 APP?=$(PROJECT_NAME)
 
-EXTRA_K8S_ARGS?=RUN_MEMORY=$(RUN_MEMORY) APP=$(APP) PROCESS=$(PROCESS) PRODUCT=$(PRODUCT) ES_CLUSTER_NAME=$(ES_CLUSTER_NAME) DEPLOY_GROUP=$(DEPLOY_GROUP) MAX_SURGE=$(MAX_SURGE) ONDEMAND_REPLICAS=$(ONDEMAND_REPLICAS) SPOT_REPLICAS=$(SPOT_REPLICAS) MIN_SPOT_REPLICAS=$(MIN_SPOT_REPLICAS) MAX_SPOT_REPLICAS=$(MAX_SPOT_REPLICAS) FRIENDLY_DNS=$(FRIENDLY_DNS) LEGACY_FRIENDLY_DNS=$(LEGACY_FRIENDLY_DNS)
+EXTRA_K8S_ARGS?=RUN_MEMORY=$(RUN_MEMORY) APP=$(APP) PROCESS=$(PROCESS) PRODUCT=$(PRODUCT) ES_CLUSTER_NAME=$(ES_CLUSTER_NAME) DEPLOY_GROUP=$(DEPLOY_GROUP) MAX_SURGE=$(MAX_SURGE) ONDEMAND_REPLICAS=$(ONDEMAND_REPLICAS) FRIENDLY_DNS=$(FRIENDLY_DNS) LEGACY_FRIENDLY_DNS=$(LEGACY_FRIENDLY_DNS)
 ifeq ($(STACK_ALIAS),)
 	override STACK_ALIAS?=$(COMMIT_HASH)
 endif
@@ -81,16 +76,10 @@ SLK_DEPLOY_URL=https://dashboard.k8s.$(if $(filter prod,$(ENV)),,qa.)vivareal.io
 check-deploy-with-rollback:
 	$(KUBECTL_CMD) rollout status deployment.v1.apps/$(DEPLOY_NAME)-ondemand || { \
 	$(KUBECTL_CMD) get ev | grep $(DEPLOY_NAME)-ondemand ; \
-	$(KUBECTL_CMD) rollout undo deployment.v1.apps/$(DEPLOY_NAME)-ondemand; exit 1; } \
-	&& \
-	$(KUBECTL_CMD) rollout status deployment.v1.apps/$(DEPLOY_NAME)-spot || { \
-	$(KUBECTL_CMD) get ev | grep $(DEPLOY_NAME)-spot ; \
-	$(KUBECTL_CMD) rollout undo deployment.v1.apps/$(DEPLOY_NAME)-spot; exit 1; }
+	$(KUBECTL_CMD) rollout undo deployment.v1.apps/$(DEPLOY_NAME)-ondemand; exit 1; }
 
 teardown:
 	$(KUBECTL_CMD) delete deploy ${DEPLOY_NAME}-ondemand && \
-	$(KUBECTL_CMD) delete deploy ${DEPLOY_NAME}-spot && \
-	$(KUBECTL_CMD) delete hpa ${DEPLOY_NAME}-spot && \
 	$(KUBECTL_CMD) delete pdb ${DEPLOY_NAME} && \
 	$(KUBECTL_CMD) delete service ${DEPLOY_NAME} && \
 	$(KUBECTL_CMD) delete ingress ${DEPLOY_NAME}
